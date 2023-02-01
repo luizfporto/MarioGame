@@ -1,21 +1,13 @@
-Canvas Boilerplate is the go-to solution for quickly creating modern canvas pieces using ES6 and webpack.
+# Jogo baseado em plataforma
 
-## Getting Started
+Este código é um jogo baseado em plataforma desenvolvido em HTML, CSS e JavaScript. 
 
-1.  Clone the repo:
+## HTML
+A página HTML define a estrutura básica da página, com uma seção de cabeçalho que inclui informações sobre a página, como o título, e uma seção de estilo que define o estilo visual da página. A parte principal da página é um elemento canvas, que é usado para desenhar o jogo.
 
-        git clone https://github.com/christopher4lis/canvas-boilerplate.git
+## JavaScript
+O código JavaScript define a lógica do jogo, incluindo a criação de um personagem jogável, plataformas e objetos genéricos. 
+- O personagem é animado através da mudança dos frames da imagem do sprite, e o movimento é controlado pela atualização de sua posição e velocidade. 
+- As plataformas são desenhadas usando a API de desenho do canvas. 
+- O jogo também implementa a física de gravidade, onde a velocidade vertical do personagem aumenta com o tempo.
 
-2.  Install dependencies:
-
-        yarn
-
-    or
-
-        npm install
-
-3.  Run webpack:
-
-        npm start
-
-Your canvas piece should open up automatically at http://localhost:3000 and you should see 'HTML CANVAS BOILERPLATE' on hover.
