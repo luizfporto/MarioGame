@@ -2,6 +2,12 @@ import platform from '../img/platform.png'
 import hills from '../img/hills.png'
 import background from '../img/background.png'
 import platformSmallTall from '../img/platformSmallTall.png'
+
+import spriteRunLeft from '../img/spriteRunLeft.png'
+import spriteRunRight from '../img/spriteRunRight.png'
+import spriteStandLeft from '../img/spriteStandLeft.png'
+import spriteStandRight from '../img/spriteStandRight.png'
+
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
 
@@ -22,16 +28,55 @@ class Player{
             y: 0
         }
 
-        this.width = 30
-        this.height = 30
+        this.width = 66
+        this.height = 150
+
+        this.image = createImage(spriteStandRight)
+        this.frames = 0
+        this.sprites = {
+            stand: {
+                right: createImage(spriteStandRight),
+                left: createImage(spriteStandLeft),
+                cropWidth: 177,
+                width: 66
+            } ,
+            run: {
+                right: createImage(spriteRunRight),
+                left: createImage(spriteRunLeft),
+                cropWidth: 341,
+                width: 127.875
+            }  
+        }
+
+        this.currentSprite = this.sprites.stand.right
+        this.currentCropWidth = 177
     }
 
     draw(){
-        c.fillStyle = 'red'
-        c.fillRect(this.position.x, this.position.y, this.width, this.height)
+        c.drawImage(
+            this.currentSprite,
+            this.currentCropWidth * this.frames,
+            0,
+            this.currentCropWidth,
+            400,
+            this.position.x,
+            this.position.y, 
+            this.width,
+            this.height
+        ) 
     }
 
     update() {
+        this.frames++
+
+        if (this.frames > 59 && (this.currentSprite === this.
+            sprites.stand.right || this.currentSprite === this.sprites.stand.left))
+            this.frames = 0
+        else if 
+        (this.frames > 29 && (this.currentSprite === this.
+            sprites.run.right || this.currentSprite === this.sprites.run.left)) 
+            this.frames = 0  
+
         this.draw()
         this.position.x += this.velocity.x
         this.position.y += this.velocity.y
@@ -89,6 +134,7 @@ let player =  new Player()
 let platforms = []
 let genericObjects = []
 
+let lastKey
 const keys = {
     right: {
         pressed: false
@@ -209,6 +255,43 @@ function animate() {
             player.velocity.y = 0
         }
     })
+
+    // sprite switching
+    if (
+        keys.right.pressed && 
+        lastKey === 'right' &&  player.currentSprite !== 
+    player.sprites.run.right) {
+        player.frames = 1
+        player.currentSprite = player.sprites.run.right
+        player.currentCropWidth = player.sprites.run.cropWidth
+        player.width = player.sprites.run.width
+    }else if (
+        keys.left.pressed &&
+        lastKey === 'left' && player.currentSprite !== player.sprites.run.left
+    ) {
+        player.currentSprite = player.sprites.run.left
+        player.currentCropWidth = player.sprites.run.cropWidth
+        player.width = player.sprites.run.width
+    }
+    else if (
+        !keys.left.pressed &&
+        lastKey === 'left' &&
+        player.currentSprite !== player.sprites.stand.left
+    ) {
+        player.currentSprite = player.sprites.stand.left
+        player.currentCropWidth = player.sprites.stand.cropWidth
+        player.width = player.sprites.stand.width
+    }
+    else if (
+        !keys.right.pressed &&
+        lastKey === 'right' &&
+        player.currentSprite !== player.sprites.stand.right
+    ) {
+        player.currentSprite = player.sprites.stand.right
+        player.currentCropWidth = player.sprites.stand.cropWidth
+        player.width = player.sprites.stand.width
+    }
+
     // win condition
     if (scrollOffset > platformImage.width * 5 + 300 - 2) {
         console.log('you win')
@@ -228,6 +311,7 @@ addEventListener('keydown', ({ keyCode }) => {
     case 37:
         console.log('left')
         keys.left.pressed = true
+        lastKey = 'left'
         break
     case 40:
         console.log('down')
@@ -235,14 +319,13 @@ addEventListener('keydown', ({ keyCode }) => {
     case 39:
         console.log('right')
         keys.right.pressed = true
+        lastKey = 'right'
         break
     case 38:
         console.log('up')
         player.velocity.y -= 25
         break        
     }
-
-    console.log(keys.right.pressed)
 })
 
 addEventListener('keyup', ({ keyCode }) => {
@@ -257,6 +340,7 @@ addEventListener('keyup', ({ keyCode }) => {
     case 39:
         console.log('right')
         keys.right.pressed = false
+        
         break
     case 38:
         console.log('up')
