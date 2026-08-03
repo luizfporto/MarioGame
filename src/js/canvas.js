@@ -1,12 +1,15 @@
 import platform from '../img/platform.png'
-import hills from '../img/hills.png'
-import background from '../img/background.png'
+import hillsImg from '../img/hills.png'
+import backgroundImg from '../img/background.png'
 import platformSmallTall from '../img/platformSmallTall.png'
 
 import spriteRunLeft from '../img/spriteRunLeft.png'
 import spriteRunRight from '../img/spriteRunRight.png'
 import spriteStandLeft from '../img/spriteStandLeft.png'
 import spriteStandRight from '../img/spriteStandRight.png'
+
+import enemyImgSrc from '../img/enemy.png'
+import spaceshipImgSrc from '../img/spaceship.png'
 
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
@@ -15,337 +18,404 @@ canvas.width = 1024
 canvas.height = 576
 
 const gravity = 1.5
-// Player
-class Player{
-    constructor(){
-        this.speed = 10
-        this.position = {
-            x: 100, 
-            y: 100
-        }
-        this.velocity = {
-            x: 0,
-            y: 0
-        }
 
-        this.width = 66
-        this.height = 150
+let score = 0
+let lives = 3
+let gameState = 'playing'
 
-        this.image = createImage(spriteStandRight)
-        this.frames = 0
-        this.sprites = {
-            stand: {
-                right: createImage(spriteStandRight),
-                left: createImage(spriteStandLeft),
-                cropWidth: 177,
-                width: 66
-            } ,
-            run: {
-                right: createImage(spriteRunRight),
-                left: createImage(spriteRunLeft),
-                cropWidth: 341,
-                width: 127.875
-            }  
-        }
+const backgroundMusic = new Audio('./audio/Orbital Colossus.mp3')
+backgroundMusic.loop = true
+backgroundMusic.volume = 0.4
+let musicStarted = false
 
-        this.currentSprite = this.sprites.stand.right
-        this.currentCropWidth = 177
-    }
-
-    draw(){
-        c.drawImage(
-            this.currentSprite,
-            this.currentCropWidth * this.frames,
-            0,
-            this.currentCropWidth,
-            400,
-            this.position.x,
-            this.position.y, 
-            this.width,
-            this.height
-        ) 
-    }
-
-    update() {
-        this.frames++
-
-        if (this.frames > 59 && (this.currentSprite === this.
-            sprites.stand.right || this.currentSprite === this.sprites.stand.left))
-            this.frames = 0
-        else if 
-        (this.frames > 29 && (this.currentSprite === this.
-            sprites.run.right || this.currentSprite === this.sprites.run.left)) 
-            this.frames = 0  
-
-        this.draw()
-        this.position.x += this.velocity.x
-        this.position.y += this.velocity.y
-
-        if (this.position.y + this.height + this.velocity.y <=
-            canvas.height) 
-            this.velocity.y += gravity    
-    }
-}
-
-class Platform {
-    constructor({ x, y, image }) {
-        this.position = {
-            x,
-            y
-        }
-       
-        this.image = image
-        this.width = image.width
-        this.height = image.height
-    }
-
-    draw() {
-        c.drawImage(this.image, this.position.x, this.position.y) 
-    }
-}
-
-class GenericObject {
-    constructor({ x, y, image }) {
-        this.position = {
-            x,
-            y
-        }
-       
-        this.image = image
-        this.width = image.width
-        this.height = image.height
-    }
-
-    draw() {
-        c.drawImage(this.image, this.position.x, this.position.y) 
-    }
-}
-
-function createImage(imageSrc){
+function createImage(imageSrc) {
     const image = new Image()
     image.src = imageSrc
     return image
 }
 
-let platformImage = createImage(platform)
-let platformSmallTallImage = createImage(platformSmallTall) 
+const platformImage = createImage(platform)
+const platformSmallTallImage = createImage(platformSmallTall)
+const background = createImage(backgroundImg)
+const hills = createImage(hillsImg)
 
-let player =  new Player()
-let platforms = []
-let genericObjects = []
+const spriteStandRightImg = createImage(spriteStandRight)
+const spriteStandLeftImg = createImage(spriteStandLeft)
+const spriteRunRightImg = createImage(spriteRunRight)
+const spriteRunLeftImg = createImage(spriteRunLeft)
 
-let lastKey
-const keys = {
-    right: {
-        pressed: false
-    },
-    left: {
-        pressed: false
+const enemyImage = createImage(enemyImgSrc)
+const spaceshipImage = createImage(spaceshipImgSrc)
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume()
+    }
+    const osc = audioCtx.createOscillator()
+    const gainNode = audioCtx.createGain()
+    osc.connect(gainNode)
+    gainNode.connect(audioCtx.destination)
+
+    if (type === 'jump') {
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15)
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.15)
+    } else if (type === 'stomp') {
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.2)
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.2)
+    } else if (type === 'gameover') {
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime)
+        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5)
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5)
+        osc.start()
+        osc.stop(audioCtx.currentTime + 0.5)
     }
 }
 
+class Player {
+    constructor() {
+        this.speed = 10
+        this.position = { x: 100, y: 100 }
+        this.velocity = { x: 0, y: 0 }
+        this.width = 66
+        this.height = 150
+        this.image = spriteStandRightImg
+        this.frames = 0
+        this.sprites = {
+            stand: { right: spriteStandRightImg, left: spriteStandLeftImg, cropWidth: 177, width: 66 },
+            run: { right: spriteRunRightImg, left: spriteRunLeftImg, cropWidth: 341, width: 127.875 }
+        }
+        this.currentStyle = this.sprites.stand
+        this.currentCropWidth = 177
+    }
+
+    draw() {
+        c.drawImage(
+            this.image,
+            this.frames * this.currentCropWidth,
+            0,
+            this.currentCropWidth,
+            400,
+            this.position.x,
+            this.position.y,
+            this.width,
+            this.height
+        )
+    }
+
+    update() {
+        this.frames++
+        if (this.frames > 59 && (this.image === this.sprites.stand.right || this.image === this.sprites.stand.left)) {
+            this.frames = 0
+        } else if (this.frames > 29 && (this.image === this.sprites.run.right || this.image === this.sprites.run.left)) {
+            this.frames = 0
+        }
+
+        this.draw()
+        this.position.x += this.velocity.x
+        this.position.y += this.velocity.y
+
+        if (this.position.y + this.height + this.velocity.y <= canvas.height) {
+            this.velocity.y += gravity
+        }
+    }
+}
+
+class Platform {
+    constructor({ x, y, image }) {
+        this.position = { x, y }
+        this.image = image
+        this.width = image.width
+        this.height = image.height
+    }
+    draw() {
+        c.drawImage(this.image, this.position.x, this.position.y)
+    }
+}
+
+class GenericObject {
+    constructor({ x, y, image }) {
+        this.position = { x, y }
+        this.image = image
+        this.width = image.width
+        this.height = image.height
+    }
+    draw() {
+        c.drawImage(this.image, this.position.x, this.position.y)
+    }
+}
+
+class Enemy {
+    constructor({ position, velocity, minX, maxX }) {
+        this.position = { x: position.x, y: position.y }
+        this.velocity = { x: velocity.x, y: velocity.y }
+        this.image = enemyImage
+        this.width = 90
+        this.height = 90
+        this.minX = minX
+        this.maxX = maxX
+    }
+    draw() {
+        c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
+    }
+    update() {
+        this.draw()
+        this.position.x += this.velocity.x
+
+        if (this.position.x <= this.minX) {
+            this.position.x = this.minX
+            this.velocity.x = -this.velocity.x
+        } else if (this.position.x + this.width >= this.maxX) {
+            this.position.x = this.maxX - this.width
+            this.velocity.x = -this.velocity.x
+        }
+    }
+}
+
+class Spaceship {
+    constructor({ position }) {
+        this.position = { x: position.x, y: position.y }
+        this.image = spaceshipImage
+        this.width = 250
+        this.height = 250
+    }
+    draw() {
+        c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
+    }
+}
+
+let player = new Player()
+let platforms = []
+let genericObjects = []
+let enemies = []
+let spaceship = {}
+
+let lastKey = ''
+const keys = { right: { pressed: false }, left: { pressed: false }, up: { pressed: false } }
 let scrollOffset = 0
 
 function init() {
-    platformImage = createImage(platform)
+    player = new Player()
+    
+    const pWidth = platformImage.width
+    const groundY = 470
 
-    player =  new Player()
     platforms = [
-        new Platform({x: platformImage.width * 4 + 300 - 2 + platformImage.width - platformSmallTallImage.width,
-            y: 270,
-            image: createImage(platformSmallTall)
-        }), 
-        new Platform({
-            x: -1,
-            y: 470,
-            image: platformImage
-        }),
-        new Platform({x: platformImage.width -3, y: 470, image:
-            platformImage}),
-        new Platform({x: platformImage.width * 2 + 100,
-            y: 470,
-            image: platformImage
-        }),
-        new Platform({x: platformImage.width * 3 + 300,
-            y: 470,
-            image: platformImage
-        }),
-        new Platform({x: platformImage.width * 4 + 300 - 2,
-            y: 470,
-            image: platformImage
-        }),
-        new Platform({x: platformImage.width * 5 + 700 - 2,
-            y: 470,
-            image: platformImage
-        })     
+        new Platform({ x: -1, y: groundY, image: platformImage }),
+        new Platform({ x: pWidth - 3, y: groundY, image: platformImage }),
+        new Platform({ x: pWidth * 2 + 150, y: groundY, image: platformImage }),
+        new Platform({ x: pWidth * 3 + 300, y: groundY, image: platformImage }),
+        new Platform({ x: pWidth * 4 + 450, y: groundY, image: platformImage })
     ]
 
     genericObjects = [
-        new GenericObject({
-            x: -1,
-            y: -1,
-            image: createImage(background)
-        }),
-        new GenericObject({
-            x: -1,
-            y: -1,
-            image: createImage(hills)
-        })
+        new GenericObject({ x: -1, y: -1, image: background }),
+        new GenericObject({ x: -1, y: -1, image: hills })
     ]
+
+    const enemySize = 90
+
+    // Inimigos nas 4 primeiras plataformas (a última, índice 4, é a do foguete e fica sem inimigo)
+    enemies = [
+        new Enemy({ position: { x: 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: 0, maxX: pWidth }),
+        new Enemy({ position: { x: pWidth + 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: pWidth, maxX: pWidth * 2 - 3 }),
+        new Enemy({ position: { x: (pWidth * 2 + 150) + 100, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: pWidth * 2 + 150, maxX: (pWidth * 2 + 150) + pWidth }),
+        new Enemy({ position: { x: (pWidth * 3 + 300) + 100, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: pWidth * 3 + 300, maxX: (pWidth * 3 + 300) + pWidth })
+    ]
+
+    // Foguete posicionado na 5ª (última) plataforma
+    spaceship = new Spaceship({ position: { x: pWidth * 4 + 450 + 200, y: groundY - 250 } })
     scrollOffset = 0
 }
+
 function animate() {
     requestAnimationFrame(animate)
     c.fillStyle = 'white'
     c.fillRect(0, 0, canvas.width, canvas.height)
-    
-    genericObjects.forEach(genericObject => {
-        genericObject.draw()
-    })
 
-    platforms.forEach((platform) => {
-        platform.draw()
-    })
+    genericObjects.forEach((g) => g.draw())
+    platforms.forEach((p) => p.draw())
+    enemies.forEach((e) => e.update())
+    if (spaceship) spaceship.draw()
     player.update()
-    
+
+    // Interface (Pontuação amarela no canto esquerdo e Corações no canto direito)
+    c.fillStyle = 'yellow'
+    c.font = '28px sans-serif'
+    c.fillText(`${score}`, 30, 45)
+    c.fillText(`${'❤️'.repeat(lives)}`, canvas.width - 150, 45)
+
     if (keys.right.pressed && player.position.x < 400) {
         player.velocity.x = player.speed
-    } else if ((keys.left.pressed && player.position.x > 100)  || 
-      (keys.left.pressed && scrollOffset === 0 && player.position.x > 0) 
-    ){
+    } else if ((keys.left.pressed && player.position.x > 100) || (keys.left.pressed && scrollOffset === 0 && player.position.x > 0)) {
         player.velocity.x = -player.speed
     } else {
         player.velocity.x = 0
-
         if (keys.right.pressed) {
             scrollOffset += player.speed
-            platforms.forEach(platform => {
-                platform.position.x -= player.speed
-            })  
-            genericObjects.forEach((genericObject) => {
-                genericObject.position.x -= player.speed * 0.66
+            platforms.forEach((p) => p.position.x -= player.speed)
+            genericObjects.forEach((g) => g.position.x -= player.speed * 0.66)
+            enemies.forEach((e) => {
+                e.position.x -= player.speed
+                e.minX -= player.speed
+                e.maxX -= player.speed
             })
+            if (spaceship) spaceship.position.x -= player.speed
         } else if (keys.left.pressed && scrollOffset > 0) {
             scrollOffset -= player.speed
-            platforms.forEach(platform => {
-                platform.position.x += player.speed
+            platforms.forEach((p) => p.position.x += player.speed)
+            genericObjects.forEach((g) => g.position.x += player.speed * 0.66)
+            enemies.forEach((e) => {
+                e.position.x += player.speed
+                e.minX += player.speed
+                e.maxX += player.speed
             })
-
-            genericObjects.forEach((genericObject) => {
-                genericObject.position.x += player.speed * 0.66
-            })
+            if (spaceship) spaceship.position.x += player.speed
         }
     }
 
-    // platform collision detection
-    platforms.forEach((platform) => {
+    platforms.forEach((p) => {
         if (
-            player.position.y + player.height <= 
-            platform.position.y
-            &&
-            player.position.y + player.height + player.velocity.y >= 
-            platform.position.y
-            &&
-            player.position.x + player.width >= 
-            platform.position.x 
-            &&
-            player.position.x <= platform.position.x + 
-            platform.width
+            player.position.y + player.height <= p.position.y &&
+            player.position.y + player.height + player.velocity.y >= p.position.y &&
+            player.position.x + player.width >= p.position.x &&
+            player.position.x <= p.position.x + p.width
         ) {
             player.velocity.y = 0
         }
     })
 
-    // sprite switching
-    if (
-        keys.right.pressed && 
-        lastKey === 'right' &&  player.currentSprite !== 
-    player.sprites.run.right) {
-        player.frames = 1
-        player.currentSprite = player.sprites.run.right
-        player.currentCropWidth = player.sprites.run.cropWidth
-        player.width = player.sprites.run.width
-    }else if (
-        keys.left.pressed &&
-        lastKey === 'left' && player.currentSprite !== player.sprites.run.left
-    ) {
-        player.currentSprite = player.sprites.run.left
-        player.currentCropWidth = player.sprites.run.cropWidth
-        player.width = player.sprites.run.width
-    }
-    else if (
-        !keys.left.pressed &&
-        lastKey === 'left' &&
-        player.currentSprite !== player.sprites.stand.left
-    ) {
-        player.currentSprite = player.sprites.stand.left
-        player.currentCropWidth = player.sprites.stand.cropWidth
-        player.width = player.sprites.stand.width
-    }
-    else if (
-        !keys.right.pressed &&
-        lastKey === 'right' &&
-        player.currentSprite !== player.sprites.stand.right
-    ) {
-        player.currentSprite = player.sprites.stand.right
-        player.currentCropWidth = player.sprites.stand.cropWidth
-        player.width = player.sprites.stand.width
-    }
+    if (gameState === 'playing') {
+        if (keys.right.pressed && lastKey === 'right' && player.image !== player.sprites.run.right) {
+            player.frames = 1
+            player.image = player.sprites.run.right
+            player.currentCropWidth = player.sprites.run.cropWidth
+            player.width = player.sprites.run.width
+        } else if (keys.left.pressed && lastKey === 'left' && player.image !== player.sprites.run.left) {
+            player.frames = 1
+            player.image = player.sprites.run.left
+            player.currentCropWidth = player.sprites.run.cropWidth
+            player.width = player.sprites.run.width
+        } else if (!keys.right.pressed && lastKey === 'right' && player.image !== player.sprites.stand.right) {
+            player.frames = 1
+            player.image = player.sprites.stand.right
+            player.currentCropWidth = player.sprites.stand.cropWidth
+            player.width = player.sprites.stand.width
+        } else if (!keys.left.pressed && lastKey === 'left' && player.image !== player.sprites.stand.left) {
+            player.frames = 1
+            player.image = player.sprites.stand.left
+            player.currentCropWidth = player.sprites.stand.cropWidth
+            player.width = player.sprites.stand.width
+        }
 
-    // win condition
-    if (scrollOffset > platformImage.width * 5 + 300 - 2) {
-        console.log('you win')
-    }
+        enemies.forEach((enemy, index) => {
+            if (
+                player.position.y + player.height <= enemy.position.y + 20 &&
+                player.position.y + player.height + player.velocity.y >= enemy.position.y &&
+                player.position.x + player.width >= enemy.position.x &&
+                player.position.x <= enemy.position.x + enemy.width
+            ) {
+                playSound('stomp')
+                player.velocity.y = -20
+                enemies.splice(index, 1)
+                score += 100
+            } else if (
+                player.position.x + player.width >= enemy.position.x &&
+                player.position.x <= enemy.position.x + enemy.width &&
+                player.position.y + player.height >= enemy.position.y &&
+                player.position.y <= enemy.position.y + enemy.height
+            ) {
+                lives--
+                playSound('gameover')
+                if (lives <= 0) {
+                    gameState = 'gameover'
+                } else {
+                    init()
+                }
+            }
+        })
 
-    // lose condition
-    if (player.position.y > canvas.height) {
-        init()
+        if (
+            spaceship &&
+            player.position.x >= spaceship.position.x &&
+            player.position.y <= spaceship.position.y + spaceship.height &&
+            player.position.x + player.width <= spaceship.position.x + spaceship.width + 50 &&
+            player.position.y + player.height >= spaceship.position.y
+        ) {
+            gameState = 'win'
+        }
+
+        if (player.position.y > canvas.height) {
+            lives--
+            playSound('gameover')
+            if (lives <= 0) {
+                gameState = 'gameover'
+            } else {
+                init()
+            }
+        }
+    } else if (gameState === 'gameover') {
+        c.fillStyle = 'rgba(0, 0, 0, 0.8)'
+        c.fillRect(0, 0, canvas.width, canvas.height)
+        c.fillStyle = 'white'
+        c.font = '50px sans-serif'
+        c.fillText('GAME OVER', canvas.width / 2 - 150, canvas.height / 2)
+        c.font = '20px sans-serif'
+        c.fillText('Pressione R para reiniciar', canvas.width / 2 - 110, canvas.height / 2 + 50)
+    } else if (gameState === 'win') {
+        c.fillStyle = 'rgba(0, 0, 0, 0.8)'
+        c.fillRect(0, 0, canvas.width, canvas.height)
+        c.fillStyle = 'yellow'
+        c.font = '50px sans-serif'
+        c.fillText('VOCÊ VENCEU!', canvas.width / 2 - 150, canvas.height / 2)
+        c.font = '20px sans-serif'
+        c.fillStyle = 'white'
+        c.fillText('Pressione R para jogar novamente', canvas.width / 2 - 130, canvas.height / 2 + 50)
     }
 }
 
 init()
 animate()
- 
-addEventListener('keydown', ({ keyCode }) => {
+
+window.addEventListener('keydown', ({ keyCode }) => {
+    if (!musicStarted) {
+        backgroundMusic.play().catch(() => {})
+        musicStarted = true
+    }
+
     switch (keyCode) {
-    case 37:
-        console.log('left')
-        keys.left.pressed = true
-        lastKey = 'left'
-        break
-    case 40:
-        console.log('down')
-        break
-    case 39:
-        console.log('right')
-        keys.right.pressed = true
-        lastKey = 'right'
-        break
-    case 38:
-        console.log('up')
-        player.velocity.y -= 25
-        break        
+        case 37: keys.left.pressed = true; lastKey = 'left'; break;
+        case 39: keys.right.pressed = true; lastKey = 'right'; break;
+        case 38:
+            if (player.velocity.y === 0) {
+                player.velocity.y -= 22
+                playSound('jump')
+            }
+            break;
+        case 82:
+            if (gameState === 'gameover' || gameState === 'win') {
+                lives = 3
+                score = 0
+                gameState = 'playing'
+                init()
+            }
+            break;
     }
 })
 
-addEventListener('keyup', ({ keyCode }) => {
+window.addEventListener('keyup', ({ keyCode }) => {
     switch (keyCode) {
-    case 37:
-        console.log('left')
-        keys.left.pressed = false
-        break
-    case 40:
-        console.log('down')
-        break
-    case 39:
-        console.log('right')
-        keys.right.pressed = false
-        
-        break
-    case 38:
-        console.log('up')
-        break        
+        case 37: keys.left.pressed = false; break;
+        case 39: keys.right.pressed = false; break;
     }
-
-    console.log(keys.right.pressed)
 })

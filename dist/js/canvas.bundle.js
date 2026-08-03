@@ -99,6 +99,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/img/enemy.png":
+/*!***************************!*\
+  !*** ./src/img/enemy.png ***!
+  \***************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "da50cc9438e72200f8b306d4ac37b8f0.png");
+
+/***/ }),
+
 /***/ "./src/img/hills.png":
 /*!***************************!*\
   !*** ./src/img/hills.png ***!
@@ -135,6 +148,19 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "0587f9be8e442eb74b2fe283bbf1a947.png");
+
+/***/ }),
+
+/***/ "./src/img/spaceship.png":
+/*!*******************************!*\
+  !*** ./src/img/spaceship.png ***!
+  \*******************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (__webpack_require__.p + "32f420b8fe627e4c74036274b7e75592.png");
 
 /***/ }),
 
@@ -207,6 +233,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _img_spriteRunRight_png__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../img/spriteRunRight.png */ "./src/img/spriteRunRight.png");
 /* harmony import */ var _img_spriteStandLeft_png__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../img/spriteStandLeft.png */ "./src/img/spriteStandLeft.png");
 /* harmony import */ var _img_spriteStandRight_png__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../img/spriteStandRight.png */ "./src/img/spriteStandRight.png");
+/* harmony import */ var _img_enemy_png__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../img/enemy.png */ "./src/img/enemy.png");
+/* harmony import */ var _img_spaceship_png__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../img/spaceship.png */ "./src/img/spaceship.png");
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -221,11 +249,72 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 
 
+
+
 var canvas = document.querySelector('canvas');
 var c = canvas.getContext('2d');
 canvas.width = 1024;
 canvas.height = 576;
-var gravity = 1.5; // Player
+var gravity = 1.5;
+var score = 0;
+var lives = 3;
+var gameState = 'playing';
+var backgroundMusic = new Audio('./audio/Orbital Colossus.mp3');
+backgroundMusic.loop = true;
+backgroundMusic.volume = 0.4;
+var musicStarted = false;
+
+function createImage(imageSrc) {
+  var image = new Image();
+  image.src = imageSrc;
+  return image;
+}
+
+var platformImage = createImage(_img_platform_png__WEBPACK_IMPORTED_MODULE_0__["default"]);
+var platformSmallTallImage = createImage(_img_platformSmallTall_png__WEBPACK_IMPORTED_MODULE_3__["default"]);
+var background = createImage(_img_background_png__WEBPACK_IMPORTED_MODULE_2__["default"]);
+var hills = createImage(_img_hills_png__WEBPACK_IMPORTED_MODULE_1__["default"]);
+var spriteStandRightImg = createImage(_img_spriteStandRight_png__WEBPACK_IMPORTED_MODULE_7__["default"]);
+var spriteStandLeftImg = createImage(_img_spriteStandLeft_png__WEBPACK_IMPORTED_MODULE_6__["default"]);
+var spriteRunRightImg = createImage(_img_spriteRunRight_png__WEBPACK_IMPORTED_MODULE_5__["default"]);
+var spriteRunLeftImg = createImage(_img_spriteRunLeft_png__WEBPACK_IMPORTED_MODULE_4__["default"]);
+var enemyImage = createImage(_img_enemy_png__WEBPACK_IMPORTED_MODULE_8__["default"]);
+var spaceshipImage = createImage(_img_spaceship_png__WEBPACK_IMPORTED_MODULE_9__["default"]);
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  var osc = audioCtx.createOscillator();
+  var gainNode = audioCtx.createGain();
+  osc.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  if (type === 'jump') {
+    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.15);
+  } else if (type === 'stomp') {
+    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.2);
+    gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
+  } else if (type === 'gameover') {
+    osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.5);
+  }
+}
 
 var Player = /*#__PURE__*/function () {
   function Player() {
@@ -242,40 +331,49 @@ var Player = /*#__PURE__*/function () {
     };
     this.width = 66;
     this.height = 150;
-    this.image = createImage(_img_spriteStandRight_png__WEBPACK_IMPORTED_MODULE_7__["default"]);
+    this.image = spriteStandRightImg;
     this.frames = 0;
     this.sprites = {
       stand: {
-        right: createImage(_img_spriteStandRight_png__WEBPACK_IMPORTED_MODULE_7__["default"]),
-        left: createImage(_img_spriteStandLeft_png__WEBPACK_IMPORTED_MODULE_6__["default"]),
+        right: spriteStandRightImg,
+        left: spriteStandLeftImg,
         cropWidth: 177,
         width: 66
       },
       run: {
-        right: createImage(_img_spriteRunRight_png__WEBPACK_IMPORTED_MODULE_5__["default"]),
-        left: createImage(_img_spriteRunLeft_png__WEBPACK_IMPORTED_MODULE_4__["default"]),
+        right: spriteRunRightImg,
+        left: spriteRunLeftImg,
         cropWidth: 341,
         width: 127.875
       }
     };
-    this.currentSprite = this.sprites.stand.right;
+    this.currentStyle = this.sprites.stand;
     this.currentCropWidth = 177;
   }
 
   _createClass(Player, [{
     key: "draw",
     value: function draw() {
-      c.drawImage(this.currentSprite, this.currentCropWidth * this.frames, 0, this.currentCropWidth, 400, this.position.x, this.position.y, this.width, this.height);
+      c.drawImage(this.image, this.frames * this.currentCropWidth, 0, this.currentCropWidth, 400, this.position.x, this.position.y, this.width, this.height);
     }
   }, {
     key: "update",
     value: function update() {
       this.frames++;
-      if (this.frames > 59 && (this.currentSprite === this.sprites.stand.right || this.currentSprite === this.sprites.stand.left)) this.frames = 0;else if (this.frames > 29 && (this.currentSprite === this.sprites.run.right || this.currentSprite === this.sprites.run.left)) this.frames = 0;
+
+      if (this.frames > 59 && (this.image === this.sprites.stand.right || this.image === this.sprites.stand.left)) {
+        this.frames = 0;
+      } else if (this.frames > 29 && (this.image === this.sprites.run.right || this.image === this.sprites.run.left)) {
+        this.frames = 0;
+      }
+
       this.draw();
       this.position.x += this.velocity.x;
       this.position.y += this.velocity.y;
-      if (this.position.y + this.height + this.velocity.y <= canvas.height) this.velocity.y += gravity;
+
+      if (this.position.y + this.height + this.velocity.y <= canvas.height) {
+        this.velocity.y += gravity;
+      }
     }
   }]);
 
@@ -336,69 +434,186 @@ var GenericObject = /*#__PURE__*/function () {
   return GenericObject;
 }();
 
-function createImage(imageSrc) {
-  var image = new Image();
-  image.src = imageSrc;
-  return image;
-}
+var Enemy = /*#__PURE__*/function () {
+  function Enemy(_ref3) {
+    var position = _ref3.position,
+        velocity = _ref3.velocity,
+        minX = _ref3.minX,
+        maxX = _ref3.maxX;
 
-var platformImage = createImage(_img_platform_png__WEBPACK_IMPORTED_MODULE_0__["default"]);
-var platformSmallTallImage = createImage(_img_platformSmallTall_png__WEBPACK_IMPORTED_MODULE_3__["default"]);
+    _classCallCheck(this, Enemy);
+
+    this.position = {
+      x: position.x,
+      y: position.y
+    };
+    this.velocity = {
+      x: velocity.x,
+      y: velocity.y
+    };
+    this.image = enemyImage;
+    this.width = 90;
+    this.height = 90;
+    this.minX = minX;
+    this.maxX = maxX;
+  }
+
+  _createClass(Enemy, [{
+    key: "draw",
+    value: function draw() {
+      c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+    }
+  }, {
+    key: "update",
+    value: function update() {
+      this.draw();
+      this.position.x += this.velocity.x;
+
+      if (this.position.x <= this.minX) {
+        this.position.x = this.minX;
+        this.velocity.x = -this.velocity.x;
+      } else if (this.position.x + this.width >= this.maxX) {
+        this.position.x = this.maxX - this.width;
+        this.velocity.x = -this.velocity.x;
+      }
+    }
+  }]);
+
+  return Enemy;
+}();
+
+var Spaceship = /*#__PURE__*/function () {
+  function Spaceship(_ref4) {
+    var position = _ref4.position;
+
+    _classCallCheck(this, Spaceship);
+
+    this.position = {
+      x: position.x,
+      y: position.y
+    };
+    this.image = spaceshipImage;
+    this.width = 250;
+    this.height = 250;
+  }
+
+  _createClass(Spaceship, [{
+    key: "draw",
+    value: function draw() {
+      c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+    }
+  }]);
+
+  return Spaceship;
+}();
+
 var player = new Player();
 var platforms = [];
 var genericObjects = [];
-var lastKey;
+var enemies = [];
+var spaceship = {};
+var lastKey = '';
 var keys = {
   right: {
     pressed: false
   },
   left: {
     pressed: false
+  },
+  up: {
+    pressed: false
   }
 };
 var scrollOffset = 0;
 
 function init() {
-  platformImage = createImage(_img_platform_png__WEBPACK_IMPORTED_MODULE_0__["default"]);
   player = new Player();
+  var pWidth = platformImage.width;
+  var groundY = 470;
   platforms = [new Platform({
-    x: platformImage.width * 4 + 300 - 2 + platformImage.width - platformSmallTallImage.width,
-    y: 270,
-    image: createImage(_img_platformSmallTall_png__WEBPACK_IMPORTED_MODULE_3__["default"])
-  }), new Platform({
     x: -1,
-    y: 470,
+    y: groundY,
     image: platformImage
   }), new Platform({
-    x: platformImage.width - 3,
-    y: 470,
+    x: pWidth - 3,
+    y: groundY,
     image: platformImage
   }), new Platform({
-    x: platformImage.width * 2 + 100,
-    y: 470,
+    x: pWidth * 2 + 150,
+    y: groundY,
     image: platformImage
   }), new Platform({
-    x: platformImage.width * 3 + 300,
-    y: 470,
+    x: pWidth * 3 + 300,
+    y: groundY,
     image: platformImage
   }), new Platform({
-    x: platformImage.width * 4 + 300 - 2,
-    y: 470,
-    image: platformImage
-  }), new Platform({
-    x: platformImage.width * 5 + 700 - 2,
-    y: 470,
+    x: pWidth * 4 + 450,
+    y: groundY,
     image: platformImage
   })];
   genericObjects = [new GenericObject({
     x: -1,
     y: -1,
-    image: createImage(_img_background_png__WEBPACK_IMPORTED_MODULE_2__["default"])
+    image: background
   }), new GenericObject({
     x: -1,
     y: -1,
-    image: createImage(_img_hills_png__WEBPACK_IMPORTED_MODULE_1__["default"])
+    image: hills
   })];
+  var enemySize = 90; // Inimigos nas 4 primeiras plataformas (a última, índice 4, é a do foguete e fica sem inimigo)
+
+  enemies = [new Enemy({
+    position: {
+      x: 200,
+      y: groundY - enemySize
+    },
+    velocity: {
+      x: 2,
+      y: 0
+    },
+    minX: 0,
+    maxX: pWidth
+  }), new Enemy({
+    position: {
+      x: pWidth + 200,
+      y: groundY - enemySize
+    },
+    velocity: {
+      x: 2,
+      y: 0
+    },
+    minX: pWidth,
+    maxX: pWidth * 2 - 3
+  }), new Enemy({
+    position: {
+      x: pWidth * 2 + 150 + 100,
+      y: groundY - enemySize
+    },
+    velocity: {
+      x: 2,
+      y: 0
+    },
+    minX: pWidth * 2 + 150,
+    maxX: pWidth * 2 + 150 + pWidth
+  }), new Enemy({
+    position: {
+      x: pWidth * 3 + 300 + 100,
+      y: groundY - enemySize
+    },
+    velocity: {
+      x: 2,
+      y: 0
+    },
+    minX: pWidth * 3 + 300,
+    maxX: pWidth * 3 + 300 + pWidth
+  })]; // Foguete posicionado na 5ª (última) plataforma
+
+  spaceship = new Spaceship({
+    position: {
+      x: pWidth * 4 + 450 + 200,
+      y: groundY - 250
+    }
+  });
   scrollOffset = 0;
 }
 
@@ -406,13 +621,22 @@ function animate() {
   requestAnimationFrame(animate);
   c.fillStyle = 'white';
   c.fillRect(0, 0, canvas.width, canvas.height);
-  genericObjects.forEach(function (genericObject) {
-    genericObject.draw();
+  genericObjects.forEach(function (g) {
+    return g.draw();
   });
-  platforms.forEach(function (platform) {
-    platform.draw();
+  platforms.forEach(function (p) {
+    return p.draw();
   });
-  player.update();
+  enemies.forEach(function (e) {
+    return e.update();
+  });
+  if (spaceship) spaceship.draw();
+  player.update(); // Interface (Pontuação amarela no canto esquerdo e Corações no canto direito)
+
+  c.fillStyle = 'yellow';
+  c.font = '28px sans-serif';
+  c.fillText("".concat(score), 30, 45);
+  c.fillText("".concat('❤️'.repeat(lives)), canvas.width - 150, 45);
 
   if (keys.right.pressed && player.position.x < 400) {
     player.velocity.x = player.speed;
@@ -423,112 +647,168 @@ function animate() {
 
     if (keys.right.pressed) {
       scrollOffset += player.speed;
-      platforms.forEach(function (platform) {
-        platform.position.x -= player.speed;
+      platforms.forEach(function (p) {
+        return p.position.x -= player.speed;
       });
-      genericObjects.forEach(function (genericObject) {
-        genericObject.position.x -= player.speed * 0.66;
+      genericObjects.forEach(function (g) {
+        return g.position.x -= player.speed * 0.66;
       });
+      enemies.forEach(function (e) {
+        e.position.x -= player.speed;
+        e.minX -= player.speed;
+        e.maxX -= player.speed;
+      });
+      if (spaceship) spaceship.position.x -= player.speed;
     } else if (keys.left.pressed && scrollOffset > 0) {
       scrollOffset -= player.speed;
-      platforms.forEach(function (platform) {
-        platform.position.x += player.speed;
+      platforms.forEach(function (p) {
+        return p.position.x += player.speed;
       });
-      genericObjects.forEach(function (genericObject) {
-        genericObject.position.x += player.speed * 0.66;
+      genericObjects.forEach(function (g) {
+        return g.position.x += player.speed * 0.66;
       });
+      enemies.forEach(function (e) {
+        e.position.x += player.speed;
+        e.minX += player.speed;
+        e.maxX += player.speed;
+      });
+      if (spaceship) spaceship.position.x += player.speed;
     }
-  } // platform collision detection
+  }
 
-
-  platforms.forEach(function (platform) {
-    if (player.position.y + player.height <= platform.position.y && player.position.y + player.height + player.velocity.y >= platform.position.y && player.position.x + player.width >= platform.position.x && player.position.x <= platform.position.x + platform.width) {
+  platforms.forEach(function (p) {
+    if (player.position.y + player.height <= p.position.y && player.position.y + player.height + player.velocity.y >= p.position.y && player.position.x + player.width >= p.position.x && player.position.x <= p.position.x + p.width) {
       player.velocity.y = 0;
     }
-  }); // sprite switching
+  });
 
-  if (keys.right.pressed && lastKey === 'right' && player.currentSprite !== player.sprites.run.right) {
-    player.frames = 1;
-    player.currentSprite = player.sprites.run.right;
-    player.currentCropWidth = player.sprites.run.cropWidth;
-    player.width = player.sprites.run.width;
-  } else if (keys.left.pressed && lastKey === 'left' && player.currentSprite !== player.sprites.run.left) {
-    player.currentSprite = player.sprites.run.left;
-    player.currentCropWidth = player.sprites.run.cropWidth;
-    player.width = player.sprites.run.width;
-  } else if (!keys.left.pressed && lastKey === 'left' && player.currentSprite !== player.sprites.stand.left) {
-    player.currentSprite = player.sprites.stand.left;
-    player.currentCropWidth = player.sprites.stand.cropWidth;
-    player.width = player.sprites.stand.width;
-  } else if (!keys.right.pressed && lastKey === 'right' && player.currentSprite !== player.sprites.stand.right) {
-    player.currentSprite = player.sprites.stand.right;
-    player.currentCropWidth = player.sprites.stand.cropWidth;
-    player.width = player.sprites.stand.width;
-  } // win condition
+  if (gameState === 'playing') {
+    if (keys.right.pressed && lastKey === 'right' && player.image !== player.sprites.run.right) {
+      player.frames = 1;
+      player.image = player.sprites.run.right;
+      player.currentCropWidth = player.sprites.run.cropWidth;
+      player.width = player.sprites.run.width;
+    } else if (keys.left.pressed && lastKey === 'left' && player.image !== player.sprites.run.left) {
+      player.frames = 1;
+      player.image = player.sprites.run.left;
+      player.currentCropWidth = player.sprites.run.cropWidth;
+      player.width = player.sprites.run.width;
+    } else if (!keys.right.pressed && lastKey === 'right' && player.image !== player.sprites.stand.right) {
+      player.frames = 1;
+      player.image = player.sprites.stand.right;
+      player.currentCropWidth = player.sprites.stand.cropWidth;
+      player.width = player.sprites.stand.width;
+    } else if (!keys.left.pressed && lastKey === 'left' && player.image !== player.sprites.stand.left) {
+      player.frames = 1;
+      player.image = player.sprites.stand.left;
+      player.currentCropWidth = player.sprites.stand.cropWidth;
+      player.width = player.sprites.stand.width;
+    }
 
+    enemies.forEach(function (enemy, index) {
+      if (player.position.y + player.height <= enemy.position.y + 20 && player.position.y + player.height + player.velocity.y >= enemy.position.y && player.position.x + player.width >= enemy.position.x && player.position.x <= enemy.position.x + enemy.width) {
+        playSound('stomp');
+        player.velocity.y = -20;
+        enemies.splice(index, 1);
+        score += 100;
+      } else if (player.position.x + player.width >= enemy.position.x && player.position.x <= enemy.position.x + enemy.width && player.position.y + player.height >= enemy.position.y && player.position.y <= enemy.position.y + enemy.height) {
+        lives--;
+        playSound('gameover');
 
-  if (scrollOffset > platformImage.width * 5 + 300 - 2) {
-    console.log('you win');
-  } // lose condition
+        if (lives <= 0) {
+          gameState = 'gameover';
+        } else {
+          init();
+        }
+      }
+    });
 
+    if (spaceship && player.position.x >= spaceship.position.x && player.position.y <= spaceship.position.y + spaceship.height && player.position.x + player.width <= spaceship.position.x + spaceship.width + 50 && player.position.y + player.height >= spaceship.position.y) {
+      gameState = 'win';
+    }
 
-  if (player.position.y > canvas.height) {
-    init();
+    if (player.position.y > canvas.height) {
+      lives--;
+      playSound('gameover');
+
+      if (lives <= 0) {
+        gameState = 'gameover';
+      } else {
+        init();
+      }
+    }
+  } else if (gameState === 'gameover') {
+    c.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    c.fillRect(0, 0, canvas.width, canvas.height);
+    c.fillStyle = 'white';
+    c.font = '50px sans-serif';
+    c.fillText('GAME OVER', canvas.width / 2 - 150, canvas.height / 2);
+    c.font = '20px sans-serif';
+    c.fillText('Pressione R para reiniciar', canvas.width / 2 - 110, canvas.height / 2 + 50);
+  } else if (gameState === 'win') {
+    c.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    c.fillRect(0, 0, canvas.width, canvas.height);
+    c.fillStyle = 'yellow';
+    c.font = '50px sans-serif';
+    c.fillText('VOCÊ VENCEU!', canvas.width / 2 - 150, canvas.height / 2);
+    c.font = '20px sans-serif';
+    c.fillStyle = 'white';
+    c.fillText('Pressione R para jogar novamente', canvas.width / 2 - 130, canvas.height / 2 + 50);
   }
 }
 
 init();
 animate();
-addEventListener('keydown', function (_ref3) {
-  var keyCode = _ref3.keyCode;
+window.addEventListener('keydown', function (_ref5) {
+  var keyCode = _ref5.keyCode;
+
+  if (!musicStarted) {
+    backgroundMusic.play()["catch"](function () {});
+    musicStarted = true;
+  }
 
   switch (keyCode) {
     case 37:
-      console.log('left');
       keys.left.pressed = true;
       lastKey = 'left';
       break;
 
-    case 40:
-      console.log('down');
-      break;
-
     case 39:
-      console.log('right');
       keys.right.pressed = true;
       lastKey = 'right';
       break;
 
     case 38:
-      console.log('up');
-      player.velocity.y -= 25;
+      if (player.velocity.y === 0) {
+        player.velocity.y -= 22;
+        playSound('jump');
+      }
+
+      break;
+
+    case 82:
+      if (gameState === 'gameover' || gameState === 'win') {
+        lives = 3;
+        score = 0;
+        gameState = 'playing';
+        init();
+      }
+
       break;
   }
 });
-addEventListener('keyup', function (_ref4) {
-  var keyCode = _ref4.keyCode;
+window.addEventListener('keyup', function (_ref6) {
+  var keyCode = _ref6.keyCode;
 
   switch (keyCode) {
     case 37:
-      console.log('left');
       keys.left.pressed = false;
       break;
 
-    case 40:
-      console.log('down');
-      break;
-
     case 39:
-      console.log('right');
       keys.right.pressed = false;
       break;
-
-    case 38:
-      console.log('up');
-      break;
   }
-
-  console.log(keys.right.pressed);
 });
 
 /***/ })
