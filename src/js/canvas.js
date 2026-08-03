@@ -22,6 +22,7 @@ const gravity = 1.5
 let score = 0
 let lives = 3
 let gameState = 'playing'
+let creditsY = canvas.height // Variável para fazer os créditos subirem
 
 const backgroundMusic = new Audio('./audio/Orbital Colossus.mp3')
 backgroundMusic.loop = true
@@ -207,15 +208,20 @@ let scrollOffset = 0
 function init() {
     player = new Player()
     
-    const pWidth = platformImage.width
     const groundY = 470
+    
+    const p1X = -1
+    const p2X = platformImage.width - 3
+    const p3X = platformImage.width * 2 + 150
+    const p4X = platformImage.width * 3 + 300
+    const p5X = platformImage.width * 4 + 450
 
     platforms = [
-        new Platform({ x: -1, y: groundY, image: platformImage }),
-        new Platform({ x: pWidth - 3, y: groundY, image: platformImage }),
-        new Platform({ x: pWidth * 2 + 150, y: groundY, image: platformImage }),
-        new Platform({ x: pWidth * 3 + 300, y: groundY, image: platformImage }),
-        new Platform({ x: pWidth * 4 + 450, y: groundY, image: platformImage })
+        new Platform({ x: p1X, y: groundY, image: platformImage }),
+        new Platform({ x: p2X, y: groundY, image: platformImage }),
+        new Platform({ x: p3X, y: groundY, image: platformImage }),
+        new Platform({ x: p4X, y: groundY, image: platformImage }),
+        new Platform({ x: p5X, y: groundY, image: platformImage })
     ]
 
     genericObjects = [
@@ -225,17 +231,16 @@ function init() {
 
     const enemySize = 90
 
-    // Inimigos nas 4 primeiras plataformas (a última, índice 4, é a do foguete e fica sem inimigo)
     enemies = [
-        new Enemy({ position: { x: 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: 0, maxX: pWidth }),
-        new Enemy({ position: { x: pWidth + 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: pWidth, maxX: pWidth * 2 - 3 }),
-        new Enemy({ position: { x: (pWidth * 2 + 150) + 100, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: pWidth * 2 + 150, maxX: (pWidth * 2 + 150) + pWidth }),
-        new Enemy({ position: { x: (pWidth * 3 + 300) + 100, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: pWidth * 3 + 300, maxX: (pWidth * 3 + 300) + pWidth })
+        new Enemy({ position: { x: p1X + 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: p1X, maxX: p1X + platformImage.width }),
+        new Enemy({ position: { x: p2X + 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: p2X, maxX: p2X + platformImage.width }),
+        new Enemy({ position: { x: p3X + 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: p3X, maxX: p3X + platformImage.width }),
+        new Enemy({ position: { x: p4X + 200, y: groundY - enemySize }, velocity: { x: 2, y: 0 }, minX: p4X, maxX: p4X + platformImage.width })
     ]
 
-    // Foguete posicionado na 5ª (última) plataforma
-    spaceship = new Spaceship({ position: { x: pWidth * 4 + 450 + 200, y: groundY - 250 } })
+    spaceship = new Spaceship({ position: { x: p5X + 200, y: groundY - 250 } })
     scrollOffset = 0
+    creditsY = canvas.height // Reinicia a posição dos créditos ao recomeçar
 }
 
 function animate() {
@@ -373,14 +378,60 @@ function animate() {
         c.font = '20px sans-serif'
         c.fillText('Pressione R para reiniciar', canvas.width / 2 - 110, canvas.height / 2 + 50)
     } else if (gameState === 'win') {
-        c.fillStyle = 'rgba(0, 0, 0, 0.8)'
+        // Tela preta de vitória
+        c.fillStyle = 'rgba(0, 0, 0, 0.95)'
         c.fillRect(0, 0, canvas.width, canvas.height)
+
+        // Título fixo no topo
         c.fillStyle = 'yellow'
-        c.font = '50px sans-serif'
-        c.fillText('VOCÊ VENCEU!', canvas.width / 2 - 150, canvas.height / 2)
-        c.font = '20px sans-serif'
+        c.font = 'bold 45px sans-serif'
+        c.textAlign = 'center'
+        c.fillText('VOCÊ VENCEU!', canvas.width / 2, 90)
+
+        // Texto subindo (Créditos)
+        c.save()
+        c.beginPath()
+        c.rect(0, 130, canvas.width, 340)
+        c.clip()
+
         c.fillStyle = 'white'
-        c.fillText('Pressione R para jogar novamente', canvas.width / 2 - 130, canvas.height / 2 + 50)
+        c.font = '24px sans-serif'
+
+        let startY = creditsY
+        const lineHeight = 45
+
+        c.fillText('--- CRÉDITOS ---', canvas.width / 2, startY)
+        c.fillText('Desenvolvido por:', canvas.width / 2, startY + lineHeight)
+        c.fillStyle = 'yellow'
+        c.fillText('Luiz Fernando Porto', canvas.width / 2, startY + lineHeight * 2)
+        
+        c.fillStyle = 'white'
+        c.fillText('Trilha Sonora:', canvas.width / 2, startY + lineHeight * 4)
+        c.fillStyle = 'yellow'
+        c.fillText('Orbital Colossus', canvas.width / 2, startY + lineHeight * 5)
+        
+        c.fillStyle = 'white'
+        c.fillText('Música por:', canvas.width / 2, startY + lineHeight * 7)
+        c.fillStyle = 'yellow'
+        c.fillText('Matthew Pablo', canvas.width / 2, startY + lineHeight * 8)
+
+        c.fillStyle = 'white'
+        c.fillText('Obrigado por jogar!', canvas.width / 2, startY + lineHeight * 10)
+
+        c.restore()
+        c.textAlign = 'left' // Reseta o alinhamento
+
+        // Faz os créditos subirem devagar
+        if (creditsY > -350) {
+            creditsY -= 0.8
+        }
+
+        // Instrução para reiniciar
+        c.fillStyle = 'white'
+        c.font = '20px sans-serif'
+        c.textAlign = 'center'
+        c.fillText('Pressione R para jogar novamente', canvas.width / 2, 520)
+        c.textAlign = 'left'
     }
 }
 

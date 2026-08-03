@@ -259,6 +259,8 @@ var gravity = 1.5;
 var score = 0;
 var lives = 3;
 var gameState = 'playing';
+var creditsY = canvas.height; // Variável para fazer os créditos subirem
+
 var backgroundMusic = new Audio('./audio/Orbital Colossus.mp3');
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.4;
@@ -528,26 +530,30 @@ var scrollOffset = 0;
 
 function init() {
   player = new Player();
-  var pWidth = platformImage.width;
   var groundY = 470;
+  var p1X = -1;
+  var p2X = platformImage.width - 3;
+  var p3X = platformImage.width * 2 + 150;
+  var p4X = platformImage.width * 3 + 300;
+  var p5X = platformImage.width * 4 + 450;
   platforms = [new Platform({
-    x: -1,
+    x: p1X,
     y: groundY,
     image: platformImage
   }), new Platform({
-    x: pWidth - 3,
+    x: p2X,
     y: groundY,
     image: platformImage
   }), new Platform({
-    x: pWidth * 2 + 150,
+    x: p3X,
     y: groundY,
     image: platformImage
   }), new Platform({
-    x: pWidth * 3 + 300,
+    x: p4X,
     y: groundY,
     image: platformImage
   }), new Platform({
-    x: pWidth * 4 + 450,
+    x: p5X,
     y: groundY,
     image: platformImage
   })];
@@ -560,61 +566,60 @@ function init() {
     y: -1,
     image: hills
   })];
-  var enemySize = 90; // Inimigos nas 4 primeiras plataformas (a última, índice 4, é a do foguete e fica sem inimigo)
-
+  var enemySize = 90;
   enemies = [new Enemy({
     position: {
-      x: 200,
+      x: p1X + 200,
       y: groundY - enemySize
     },
     velocity: {
       x: 2,
       y: 0
     },
-    minX: 0,
-    maxX: pWidth
+    minX: p1X,
+    maxX: p1X + platformImage.width
   }), new Enemy({
     position: {
-      x: pWidth + 200,
+      x: p2X + 200,
       y: groundY - enemySize
     },
     velocity: {
       x: 2,
       y: 0
     },
-    minX: pWidth,
-    maxX: pWidth * 2 - 3
+    minX: p2X,
+    maxX: p2X + platformImage.width
   }), new Enemy({
     position: {
-      x: pWidth * 2 + 150 + 100,
+      x: p3X + 200,
       y: groundY - enemySize
     },
     velocity: {
       x: 2,
       y: 0
     },
-    minX: pWidth * 2 + 150,
-    maxX: pWidth * 2 + 150 + pWidth
+    minX: p3X,
+    maxX: p3X + platformImage.width
   }), new Enemy({
     position: {
-      x: pWidth * 3 + 300 + 100,
+      x: p4X + 200,
       y: groundY - enemySize
     },
     velocity: {
       x: 2,
       y: 0
     },
-    minX: pWidth * 3 + 300,
-    maxX: pWidth * 3 + 300 + pWidth
-  })]; // Foguete posicionado na 5ª (última) plataforma
-
+    minX: p4X,
+    maxX: p4X + platformImage.width
+  })];
   spaceship = new Spaceship({
     position: {
-      x: pWidth * 4 + 450 + 200,
+      x: p5X + 200,
       y: groundY - 250
     }
   });
   scrollOffset = 0;
+  creditsY = canvas.height; // Reinicia a posição dos créditos ao recomeçar
 }
 
 function animate() {
@@ -746,14 +751,51 @@ function animate() {
     c.font = '20px sans-serif';
     c.fillText('Pressione R para reiniciar', canvas.width / 2 - 110, canvas.height / 2 + 50);
   } else if (gameState === 'win') {
-    c.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    c.fillRect(0, 0, canvas.width, canvas.height);
+    // Tela preta de vitória
+    c.fillStyle = 'rgba(0, 0, 0, 0.95)';
+    c.fillRect(0, 0, canvas.width, canvas.height); // Título fixo no topo
+
     c.fillStyle = 'yellow';
-    c.font = '50px sans-serif';
-    c.fillText('VOCÊ VENCEU!', canvas.width / 2 - 150, canvas.height / 2);
-    c.font = '20px sans-serif';
+    c.font = 'bold 45px sans-serif';
+    c.textAlign = 'center';
+    c.fillText('VOCÊ VENCEU!', canvas.width / 2, 90); // Texto subindo (Créditos)
+
+    c.save();
+    c.beginPath();
+    c.rect(0, 130, canvas.width, 340);
+    c.clip();
     c.fillStyle = 'white';
-    c.fillText('Pressione R para jogar novamente', canvas.width / 2 - 130, canvas.height / 2 + 50);
+    c.font = '24px sans-serif';
+    var startY = creditsY;
+    var lineHeight = 45;
+    c.fillText('--- CRÉDITOS ---', canvas.width / 2, startY);
+    c.fillText('Desenvolvido por:', canvas.width / 2, startY + lineHeight);
+    c.fillStyle = 'yellow';
+    c.fillText('Luiz Fernando Porto', canvas.width / 2, startY + lineHeight * 2);
+    c.fillStyle = 'white';
+    c.fillText('Trilha Sonora:', canvas.width / 2, startY + lineHeight * 4);
+    c.fillStyle = 'yellow';
+    c.fillText('Orbital Colossus', canvas.width / 2, startY + lineHeight * 5);
+    c.fillStyle = 'white';
+    c.fillText('Música por:', canvas.width / 2, startY + lineHeight * 7);
+    c.fillStyle = 'yellow';
+    c.fillText('Matthew Pablo', canvas.width / 2, startY + lineHeight * 8);
+    c.fillStyle = 'white';
+    c.fillText('Obrigado por jogar!', canvas.width / 2, startY + lineHeight * 10);
+    c.restore();
+    c.textAlign = 'left'; // Reseta o alinhamento
+    // Faz os créditos subirem devagar
+
+    if (creditsY > -350) {
+      creditsY -= 0.8;
+    } // Instrução para reiniciar
+
+
+    c.fillStyle = 'white';
+    c.font = '20px sans-serif';
+    c.textAlign = 'center';
+    c.fillText('Pressione R para jogar novamente', canvas.width / 2, 520);
+    c.textAlign = 'left';
   }
 }
 
