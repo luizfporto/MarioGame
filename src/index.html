@@ -6,8 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MarioGame</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
+            padding: 0;
+        }
+        body {
             background-color: black;
             display: flex;
             flex-direction: column;
@@ -18,33 +22,32 @@
             touch-action: none;
         }
         canvas {
-            width: 100%;
-            max-width: 800px;
-            height: auto;
+            width: 100vw;
+            height: 65vh;
             object-fit: contain;
+            background-color: #222;
         }
-        /* Estilo dos botões mobile */
         #mobile-controls {
             display: flex;
             justify-content: space-between;
-            width: 100%;
-            max-width: 800px;
-            padding: 15px 20px;
-            box-sizing: border-box;
-            background-color: rgba(0, 0, 0, 0.8);
+            width: 100vw;
+            height: 35vh;
+            padding: 20px;
+            background-color: black;
         }
         .control-group {
             display: flex;
-            gap: 20px;
+            gap: 15px;
+            align-items: center;
         }
         .game-btn {
-            width: 65px;
-            height: 65px;
+            width: 70px;
+            height: 70px;
             background-color: rgba(255, 255, 255, 0.25);
             border: 2px solid white;
             border-radius: 50%;
             color: white;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -61,7 +64,6 @@
 <body>
     <canvas></canvas>
 
-    <!-- Botões virtuais para celular -->
     <div id="mobile-controls">
         <div class="control-group">
             <button class="game-btn" id="btn-left">◀</button>
