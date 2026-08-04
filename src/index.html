@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=0.8, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MarioGame</title>
     <style>
         * {
@@ -11,45 +11,47 @@
             margin: 0;
             padding: 0;
         }
-        html, body {
+        body {
+            background-color: black;
             width: 100vw;
             height: 100vh;
-            background-color: black;
             overflow: hidden;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             touch-action: none;
         }
         canvas {
             width: 100%;
-            height: 72vh;
+            height: 100%;
             object-fit: contain;
             background-color: #111;
         }
+        /* Controles flutuantes fixos na tela do celular */
         #mobile-controls {
+            position: fixed;
+            bottom: 10px;
+            left: 0;
             width: 100%;
-            height: 28vh;
             display: flex;
             justify-content: space-between;
-            padding: 10px 40px;
-            background-color: black;
-            align-items: center;
-            z-index: 10;
+            padding: 0 20px;
+            z-index: 9999;
+            pointer-events: none;
         }
         .control-group {
             display: flex;
-            gap: 25px;
+            gap: 15px;
+            pointer-events: auto;
         }
         .game-btn {
-            width: 65px;
-            height: 65px;
-            background-color: rgba(255, 255, 255, 0.35);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.4);
             border: 2px solid white;
             border-radius: 50%;
             color: white;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -57,7 +59,7 @@
             user-select: none;
             outline: none;
             -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
         }
         .game-btn:active {
             background-color: rgba(255, 255, 255, 0.8);
