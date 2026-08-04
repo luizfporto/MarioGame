@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=0.8, user-scalable=no">
     <title>MarioGame</title>
     <style>
         * {
@@ -18,38 +18,38 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
+            justify-content: space-between;
             align-items: center;
             touch-action: none;
         }
         canvas {
             width: 100%;
-            height: 78vh; /* O jogo ocupa 78% da tela */
+            height: 72vh;
             object-fit: contain;
             background-color: #111;
         }
         #mobile-controls {
             width: 100%;
-            height: 22vh; /* Os botões ocupam os 22% restantes perfeitamente */
+            height: 28vh;
             display: flex;
             justify-content: space-between;
-            padding: 10px 30px;
+            padding: 10px 40px;
             background-color: black;
             align-items: center;
             z-index: 10;
         }
         .control-group {
             display: flex;
-            gap: 20px;
+            gap: 25px;
         }
         .game-btn {
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             background-color: rgba(255, 255, 255, 0.35);
             border: 2px solid white;
             border-radius: 50%;
             color: white;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             display: flex;
             align-items: center;
