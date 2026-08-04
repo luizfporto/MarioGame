@@ -205,11 +205,11 @@ let lastKey = ''
 const keys = { right: { pressed: false }, left: { pressed: false }, up: { pressed: false } }
 let scrollOffset = 0
 
-// Coordenadas dos botões virtuais desenhados na tela
+// Coordenadas dos botões virtuais desenhados na tela (mais para cima para não sumirem)
 const touchButtons = {
-    left: { x: 40, y: 460, width: 80, height: 80, pressed: false },
-    right: { x: 140, y: 460, width: 80, height: 80, pressed: false },
-    jump: { x: 900, y: 460, width: 80, height: 80, pressed: false }
+    left: { x: 40, y: 420, width: 90, height: 90, pressed: false },
+    right: { x: 150, y: 420, width: 90, height: 90, pressed: false },
+    jump: { x: 880, y: 420, width: 90, height: 90, pressed: false }
 }
 
 function init() {
