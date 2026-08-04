@@ -22,7 +22,7 @@ const gravity = 1.5
 let score = 0
 let lives = 3
 let gameState = 'playing'
-let creditsY = canvas.height // Variável para fazer os créditos subirem
+let creditsY = canvas.height
 
 const backgroundMusic = new Audio('./audio/Orbital Colossus.mp3')
 backgroundMusic.loop = true
@@ -205,6 +205,13 @@ let lastKey = ''
 const keys = { right: { pressed: false }, left: { pressed: false }, up: { pressed: false } }
 let scrollOffset = 0
 
+// Coordenadas dos botões virtuais desenhados na tela
+const touchButtons = {
+    left: { x: 40, y: 460, width: 80, height: 80, pressed: false },
+    right: { x: 140, y: 460, width: 80, height: 80, pressed: false },
+    jump: { x: 900, y: 460, width: 80, height: 80, pressed: false }
+}
+
 function init() {
     player = new Player()
     
@@ -240,7 +247,34 @@ function init() {
 
     spaceship = new Spaceship({ position: { x: p5X + 200, y: groundY - 250 } })
     scrollOffset = 0
-    creditsY = canvas.height // Reinicia a posição dos créditos ao recomeçar
+    creditsY = canvas.height
+}
+
+function drawTouchControls() {
+    // Desenha os botões na tela para o usuário tocar
+    c.save()
+    c.lineWidth = 3
+    c.font = 'bold 30px sans-serif'
+    c.textAlign = 'center'
+    c.textBaseline = 'middle'
+
+    for (let key in touchButtons) {
+        let btn = touchButtons[key]
+        c.fillStyle = btn.pressed ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.3)'
+        c.strokeStyle = 'white'
+        c.beginPath()
+        c.arc(btn.x + btn.width / 2, btn.y + btn.height / 2, btn.width / 2, 0, Math.PI * 2)
+        c.fill()
+        c.stroke()
+
+        c.fillStyle = 'white'
+        let label = key === 'left' ? '◄' : key === 'right' ? '►' : '▲'
+        if ((gameState === 'gameover' || gameState === 'win') && key === 'jump') {
+            label = '🔄'
+        }
+        c.fillText(label, btn.x + btn.width / 2, btn.y + btn.height / 2)
+    }
+    c.restore()
 }
 
 function animate() {
@@ -254,19 +288,27 @@ function animate() {
     if (spaceship) spaceship.draw()
     player.update()
 
-    // Interface (Pontuação amarela no canto esquerdo e Corações no canto direito)
+    // Desenha os botões virtuais por cima de tudo
+    drawTouchControls()
+
+    // Interface (Pontuação e Vidas)
     c.fillStyle = 'yellow'
     c.font = '28px sans-serif'
+    c.textAlign = 'left'
     c.fillText(`${score}`, 30, 45)
     c.fillText(`${'❤️'.repeat(lives)}`, canvas.width - 150, 45)
 
-    if (keys.right.pressed && player.position.x < 400) {
+    // Atualiza movimento com base no teclado ou nos botões virtuais
+    let movingRight = keys.right.pressed || touchButtons.right.pressed
+    let movingLeft = keys.left.pressed || touchButtons.left.pressed
+
+    if (movingRight && player.position.x < 400) {
         player.velocity.x = player.speed
-    } else if ((keys.left.pressed && player.position.x > 100) || (keys.left.pressed && scrollOffset === 0 && player.position.x > 0)) {
+    } else if ((movingLeft && player.position.x > 100) || (movingLeft && scrollOffset === 0 && player.position.x > 0)) {
         player.velocity.x = -player.speed
     } else {
         player.velocity.x = 0
-        if (keys.right.pressed) {
+        if (movingRight) {
             scrollOffset += player.speed
             platforms.forEach((p) => p.position.x -= player.speed)
             genericObjects.forEach((g) => g.position.x -= player.speed * 0.66)
@@ -276,7 +318,7 @@ function animate() {
                 e.maxX -= player.speed
             })
             if (spaceship) spaceship.position.x -= player.speed
-        } else if (keys.left.pressed && scrollOffset > 0) {
+        } else if (movingLeft && scrollOffset > 0) {
             scrollOffset -= player.speed
             platforms.forEach((p) => p.position.x += player.speed)
             genericObjects.forEach((g) => g.position.x += player.speed * 0.66)
@@ -301,22 +343,22 @@ function animate() {
     })
 
     if (gameState === 'playing') {
-        if (keys.right.pressed && lastKey === 'right' && player.image !== player.sprites.run.right) {
+        if (movingRight && lastKey === 'right' && player.image !== player.sprites.run.right) {
             player.frames = 1
             player.image = player.sprites.run.right
             player.currentCropWidth = player.sprites.run.cropWidth
             player.width = player.sprites.run.width
-        } else if (keys.left.pressed && lastKey === 'left' && player.image !== player.sprites.run.left) {
+        } else if (movingLeft && lastKey === 'left' && player.image !== player.sprites.run.left) {
             player.frames = 1
             player.image = player.sprites.run.left
             player.currentCropWidth = player.sprites.run.cropWidth
             player.width = player.sprites.run.width
-        } else if (!keys.right.pressed && lastKey === 'right' && player.image !== player.sprites.stand.right) {
+        } else if (!movingRight && lastKey === 'right' && player.image !== player.sprites.stand.right) {
             player.frames = 1
             player.image = player.sprites.stand.right
             player.currentCropWidth = player.sprites.stand.cropWidth
             player.width = player.sprites.stand.width
-        } else if (!keys.left.pressed && lastKey === 'left' && player.image !== player.sprites.stand.left) {
+        } else if (!movingLeft && lastKey === 'left' && player.image !== player.sprites.stand.left) {
             player.frames = 1
             player.image = player.sprites.stand.left
             player.currentCropWidth = player.sprites.stand.cropWidth
@@ -374,21 +416,19 @@ function animate() {
         c.fillRect(0, 0, canvas.width, canvas.height)
         c.fillStyle = 'white'
         c.font = '50px sans-serif'
-        c.fillText('GAME OVER', canvas.width / 2 - 150, canvas.height / 2)
+        c.textAlign = 'center'
+        c.fillText('GAME OVER', canvas.width / 2, canvas.height / 2)
         c.font = '20px sans-serif'
-        c.fillText('Pressione R para reiniciar', canvas.width / 2 - 110, canvas.height / 2 + 50)
+        c.fillText('Pressione R ou toque no botão de pulo para reiniciar', canvas.width / 2, canvas.height / 2 + 50)
     } else if (gameState === 'win') {
-        // Tela preta de vitória
         c.fillStyle = 'rgba(0, 0, 0, 0.95)'
         c.fillRect(0, 0, canvas.width, canvas.height)
 
-        // Título fixo no topo
         c.fillStyle = 'yellow'
         c.font = 'bold 45px sans-serif'
         c.textAlign = 'center'
         c.fillText('VOCÊ VENCEU!', canvas.width / 2, 90)
 
-        // Texto subindo (Créditos)
         c.save()
         c.beginPath()
         c.rect(0, 130, canvas.width, 340)
@@ -419,25 +459,22 @@ function animate() {
         c.fillText('Obrigado por jogar!', canvas.width / 2, startY + lineHeight * 10)
 
         c.restore()
-        c.textAlign = 'left' // Reseta o alinhamento
 
-        // Faz os créditos subirem devagar
         if (creditsY > -350) {
             creditsY -= 0.8
         }
 
-        // Instrução para reiniciar
         c.fillStyle = 'white'
         c.font = '20px sans-serif'
         c.textAlign = 'center'
-        c.fillText('Pressione R para jogar novamente', canvas.width / 2, 520)
-        c.textAlign = 'left'
+        c.fillText('Toque no botão 🔄 para jogar novamente', canvas.width / 2, 520)
     }
 }
 
 init()
 animate()
 
+// Eventos de teclado
 window.addEventListener('keydown', ({ keyCode }) => {
     if (!musicStarted) {
         backgroundMusic.play().catch(() => {})
@@ -471,58 +508,70 @@ window.addEventListener('keyup', ({ keyCode }) => {
     }
 })
 
-// --- CONTROLES PARA CELULAR (TOUCH) ---
-const btnLeft = document.getElementById('btn-left');
-const btnRight = document.getElementById('btn-right');
-const btnJump = document.getElementById('btn-jump');
-
-// Função para iniciar a música no primeiro toque na tela
-function handleTouchStart(action) {
-    if (!musicStarted) {
-        backgroundMusic.play().catch(() => {});
-        musicStarted = true;
+// --- CONTROLES POR TOQUE DIRETO NO CANVAS ---
+function getCanvasCoordinates(e) {
+    const rect = canvas.getBoundingClientRect()
+    const touch = e.touches[0]
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY
     }
-    action();
 }
 
-// Botão Esquerda
-if (btnLeft) {
-    btnLeft.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        handleTouchStart(() => { keys.left.pressed = true; lastKey = 'left'; });
-    });
-    btnLeft.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        keys.left.pressed = false;
-    });
-}
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault()
+    if (!musicStarted) {
+        backgroundMusic.play().catch(() => {})
+        musicStarted = true
+    }
 
-// Botão Direita
-if (btnRight) {
-    btnRight.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        handleTouchStart(() => { keys.right.pressed = true; lastKey = 'right'; });
-    });
-    btnRight.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        keys.right.pressed = false;
-    });
-}
+    const pos = getCanvasCoordinates(e)
 
-// Botão Pular / Reiniciar (se estiver em game over ou vitória)
-if (btnJump) {
-    btnJump.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        handleTouchStart(() => {
-            if (gameState === 'gameover' || gameState === 'win') {
-                lives = 3;
-                score = 0;
-                gameState = 'playing';
-                init();
-            } else if (player.velocity.y === 0) {
-                player.velocity.y -= 22;
-                playSound('jump');
+    for (let key in touchButtons) {
+        let btn = touchButtons[key]
+        if (pos.x >= btn.x && pos.x <= btn.x + btn.width && pos.y >= btn.y && pos.y <= btn.y + btn.height) {
+            btn.pressed = true
+            if (key === 'left') lastKey = 'left'
+            if (key === 'right') lastKey = 'right'
+            if (key === 'jump') {
+                if (gameState === 'gameover' || gameState === 'win') {
+                    lives = 3
+                    score = 0
+                    gameState = 'playing'
+                    init()
+                } else if (player.velocity.y === 0) {
+                    player.velocity.y -= 22
+                    playSound('jump')
+                }
             }
-        });
-    });
-}
+        }
+    }
+}, { passive: false })
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault()
+    // Reseta todos e checa quais toques ainda estão na tela
+    for (let key in touchButtons) {
+        touchButtons[key].pressed = false
+    }
+
+    for (let i = 0; i < e.touches.length; i++) {
+        const rect = canvas.getBoundingClientRect()
+        const touch = e.touches[i]
+        const scaleX = canvas.width / rect.width
+        const scaleY = canvas.height / rect.height
+        const pos = {
+            x: (touch.clientX - rect.left) * scaleX,
+            y: (touch.clientY - rect.top) * scaleY
+        }
+
+        for (let key in touchButtons) {
+            let btn = touchButtons[key]
+            if (pos.x >= btn.x && pos.x <= btn.x + btn.width && pos.y >= btn.y && pos.y <= btn.y + btn.height) {
+                btn.pressed = true
+            }
+        }
+    }
+}, { passive: false })
