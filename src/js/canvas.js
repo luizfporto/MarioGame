@@ -470,3 +470,59 @@ window.addEventListener('keyup', ({ keyCode }) => {
         case 39: keys.right.pressed = false; break;
     }
 })
+
+// --- CONTROLES PARA CELULAR (TOUCH) ---
+const btnLeft = document.getElementById('btn-left');
+const btnRight = document.getElementById('btn-right');
+const btnJump = document.getElementById('btn-jump');
+
+// Função para iniciar a música no primeiro toque na tela
+function handleTouchStart(action) {
+    if (!musicStarted) {
+        backgroundMusic.play().catch(() => {});
+        musicStarted = true;
+    }
+    action();
+}
+
+// Botão Esquerda
+if (btnLeft) {
+    btnLeft.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleTouchStart(() => { keys.left.pressed = true; lastKey = 'left'; });
+    });
+    btnLeft.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        keys.left.pressed = false;
+    });
+}
+
+// Botão Direita
+if (btnRight) {
+    btnRight.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleTouchStart(() => { keys.right.pressed = true; lastKey = 'right'; });
+    });
+    btnRight.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        keys.right.pressed = false;
+    });
+}
+
+// Botão Pular / Reiniciar (se estiver em game over ou vitória)
+if (btnJump) {
+    btnJump.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleTouchStart(() => {
+            if (gameState === 'gameover' || gameState === 'win') {
+                lives = 3;
+                score = 0;
+                gameState = 'playing';
+                init();
+            } else if (player.velocity.y === 0) {
+                player.velocity.y -= 22;
+                playSound('jump');
+            }
+        });
+    });
+}

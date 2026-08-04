@@ -4,21 +4,70 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MarioGame-server</title>
+    <title>MarioGame</title>
     <style>
-        body{
+        body {
             margin: 0;
             background-color: black;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Estilo dos botões mobile */
+        #mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+        .control-group {
+            display: flex;
+            gap: 15px;
+        }
+        .game-btn {
+            width: 70px;
+            height: 70px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border: 2px solid white;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .game-btn:active {
+            background-color: rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
 <body>
     <canvas></canvas>
 
-    <!-- <script src="index.js" type="module"></script> -->
+    <!-- Botões virtuais para celular -->
+    <div id="mobile-controls">
+        <div class="control-group">
+            <button class="game-btn" id="btn-left">◀</button>
+            <button class="game-btn" id="btn-right">▶</button>
+        </div>
+        <div class="control-group">
+            <button class="game-btn" id="btn-jump">▲</button>
+        </div>
+    </div>
 </body>
 </html>
