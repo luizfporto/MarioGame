@@ -27,56 +27,9 @@
             object-fit: contain;
             background-color: #111;
         }
-        /* Controles flutuantes fixos na tela do celular */
-        #mobile-controls {
-            position: fixed;
-            bottom: 10px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 9999;
-            pointer-events: none;
-        }
-        .control-group {
-            display: flex;
-            gap: 15px;
-            pointer-events: auto;
-        }
-        .game-btn {
-            width: 60px;
-            height: 60px;
-            background-color: rgba(255, 255, 255, 0.4);
-            border: 2px solid white;
-            border-radius: 50%;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-        }
-        .game-btn:active {
-            background-color: rgba(255, 255, 255, 0.8);
-        }
     </style>
 </head>
 <body>
-    <canvas></canvas>
-
-    <div id="mobile-controls">
-        <div class="control-group">
-            <button class="game-btn" id="btn-left">◀</button>
-            <button class="game-btn" id="btn-right">▶</button>
-        </div>
-        <div class="control-group">
-            <button class="game-btn" id="btn-jump">▲</button>
-        </div>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 </body>
 </html>
